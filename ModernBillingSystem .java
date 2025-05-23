@@ -2,16 +2,16 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-class ModernBillingSystem extends JFrame {
-    private final DefaultTableModel tableModel;
-    private final JTextField nameField = new JTextField(10);
-    private final JTextField priceField = new JTextField(5);
-    private final JTextField quantityField = new JTextField(3);
-    private final JTextArea receiptArea = new JTextArea();
+public class ModernBillingSystem extends JFrame {
+
+    private final DefaultTableModel cartModel;
+    private final JTextField itemInput = new JTextField(10);
+    private final JTextField priceInput = new JTextField(5);
+    private final JTextField quantityInput = new JTextField(3);
+    private final JTextArea billArea = new JTextArea();
 
     public ModernBillingSystem() {
         setTitle("Modern Billing System");
@@ -20,73 +20,65 @@ class ModernBillingSystem extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Top Panel: Form Inputs
-        JPanel inputPanel = new JPanel();
-        inputPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        inputPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-        inputPanel.setBackground(new Color(245, 245, 245));
+        JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        topBar.setBackground(new Color(245, 245, 245));
+        topBar.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        inputPanel.add(new JLabel("Item:"));
-        inputPanel.add(nameField);
-        inputPanel.add(new JLabel("Price:"));
-        inputPanel.add(priceField);
-        inputPanel.add(new JLabel("Qty:"));
-        inputPanel.add(quantityField);
+        topBar.add(new JLabel("Item:"));
+        topBar.add(itemInput);
+        topBar.add(new JLabel("Price:"));
+        topBar.add(priceInput);
+        topBar.add(new JLabel("Qty:"));
+        topBar.add(quantityInput);
 
-        JButton addBtn = new JButton("➕ Add Item");
-        addBtn.setFocusPainted(false);
-        addBtn.addActionListener(e -> addItem());
-        inputPanel.add(addBtn);
+        JButton addItemBtn = new JButton("Add Item");
+        addItemBtn.addActionListener(e -> handleAddItem());
+        topBar.add(addItemBtn);
 
-        add(inputPanel, BorderLayout.NORTH);
+        add(topBar, BorderLayout.NORTH);
 
-        // Center Panel: Table + Receipt
-        JPanel centerPanel = new JPanel(new GridLayout(1, 2, 10, 10));
-        centerPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        JPanel center = new JPanel(new GridLayout(1, 2, 10, 10));
+        center.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        // Table: Cart Items
-        tableModel = new DefaultTableModel(new Object[]{"Item", "Price", "Qty", "Total"}, 0);
-        JTable table = new JTable(tableModel);
-        table.setRowHeight(25);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        JScrollPane tableScroll = new JScrollPane(table);
-        centerPanel.add(tableScroll);
+        cartModel = new DefaultTableModel(new Object[]{"Item", "Price", "Qty", "Total"}, 0);
+        JTable cartTable = new JTable(cartModel);
+        cartTable.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cartTable.setRowHeight(25);
+        center.add(new JScrollPane(cartTable));
 
-        // Receipt
-        receiptArea.setFont(new Font("Consolas", Font.PLAIN, 14));
-        receiptArea.setEditable(false);
-        receiptArea.setBorder(BorderFactory.createTitledBorder("Receipt"));
-        centerPanel.add(new JScrollPane(receiptArea));
+        billArea.setFont(new Font("Consolas", Font.PLAIN, 14));
+        billArea.setEditable(false);
+        billArea.setBorder(BorderFactory.createTitledBorder("Receipt"));
+        center.add(new JScrollPane(billArea));
 
-        add(centerPanel, BorderLayout.CENTER);
+        add(center, BorderLayout.CENTER);
 
-        // Bottom Panel: Action Buttons
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        bottomPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        footer.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        JButton generateReceiptBtn = new JButton("🧾 Generate Receipt");
-        generateReceiptBtn.addActionListener(e -> generateReceipt());
+        JButton receiptBtn = new JButton("Generate Receipt");
+        receiptBtn.addActionListener(e -> handleReceipt());
 
-        JButton clearBtn = new JButton("🧹 Clear");
-        clearBtn.addActionListener(e -> clearAll());
+        JButton resetBtn = new JButton("Clear");
+        resetBtn.addActionListener(e -> resetForm());
 
-        JButton exitBtn = new JButton("❌ Exit");
-        exitBtn.addActionListener(e -> System.exit(0));
+        JButton closeBtn = new JButton("Exit");
+        closeBtn.addActionListener(e -> System.exit(0));
 
-        bottomPanel.add(generateReceiptBtn);
-        bottomPanel.add(clearBtn);
-        bottomPanel.add(exitBtn);
+        footer.add(receiptBtn);
+        footer.add(resetBtn);
+        footer.add(closeBtn);
 
-        add(bottomPanel, BorderLayout.SOUTH);
+        add(footer, BorderLayout.SOUTH);
     }
 
-    private void addItem() {
-        String name = nameField.getText();
-        String priceText = priceField.getText();
-        String qtyText = quantityField.getText();
+    private void handleAddItem() {
+        String name = itemInput.getText().trim();
+        String priceText = priceInput.getText().trim();
+        String qtyText = quantityInput.getText().trim();
 
         if (name.isEmpty() || priceText.isEmpty() || qtyText.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter all item details.");
+            JOptionPane.showMessageDialog(this, "Fill in all fields.");
             return;
         }
 
@@ -95,55 +87,56 @@ class ModernBillingSystem extends JFrame {
             int qty = Integer.parseInt(qtyText);
             double total = price * qty;
 
-            tableModel.addRow(new Object[]{name, price, qty, String.format("%.2f", total)});
+            cartModel.addRow(new Object[]{name, price, qty, String.format("%.2f", total)});
 
-            nameField.setText("");
-            priceField.setText("");
-            quantityField.setText("");
+            itemInput.setText("");
+            priceInput.setText("");
+            quantityInput.setText("");
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Invalid number format.");
+            JOptionPane.showMessageDialog(this, "Please enter valid numbers.");
         }
     }
 
-    private void generateReceipt() {
-        if (tableModel.getRowCount() == 0) {
-            JOptionPane.showMessageDialog(this, "No items to generate receipt.");
+    private void handleReceipt() {
+        if (cartModel.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "No items in the cart.");
             return;
         }
 
         StringBuilder receipt = new StringBuilder();
-        receipt.append("======= Java Billing Receipt =======\n");
+        receipt.append("========= Billing Receipt =========\n");
         receipt.append("Date: ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append("\n");
-        receipt.append("====================================\n");
+        receipt.append("===================================\n");
         receipt.append(String.format("%-15s %-8s %-6s %-8s\n", "Item", "Price", "Qty", "Total"));
-        receipt.append("------------------------------------\n");
+        receipt.append("-----------------------------------\n");
 
-        double grandTotal = 0;
-        for (int i = 0; i < tableModel.getRowCount(); i++) {
-            String item = tableModel.getValueAt(i, 0).toString();
-            double price = Double.parseDouble(tableModel.getValueAt(i, 1).toString());
-            int qty = Integer.parseInt(tableModel.getValueAt(i, 2).toString());
-            double total = Double.parseDouble(tableModel.getValueAt(i, 3).toString());
+        double sum = 0;
 
-            grandTotal += total;
+        for (int i = 0; i < cartModel.getRowCount(); i++) {
+            String item = cartModel.getValueAt(i, 0).toString();
+            double price = Double.parseDouble(cartModel.getValueAt(i, 1).toString());
+            int qty = Integer.parseInt(cartModel.getValueAt(i, 2).toString());
+            double total = Double.parseDouble(cartModel.getValueAt(i, 3).toString());
+
+            sum += total;
 
             receipt.append(String.format("%-15s %-8.2f %-6d %-8.2f\n", item, price, qty, total));
         }
 
-        receipt.append("------------------------------------\n");
-        receipt.append(String.format("%-30s %-8.2f\n", "Grand Total:", grandTotal));
-        receipt.append("====================================\n");
-        receipt.append("Thank you for shopping with us!\n");
+        receipt.append("-----------------------------------\n");
+        receipt.append(String.format("%-30s %-8.2f\n", "Grand Total:", sum));
+        receipt.append("===================================\n");
+        receipt.append("Thanks for your purchase!\n");
 
-        receiptArea.setText(receipt.toString());
+        billArea.setText(receipt.toString());
     }
 
-    private void clearAll() {
-        tableModel.setRowCount(0);
-        receiptArea.setText("");
-        nameField.setText("");
-        priceField.setText("");
-        quantityField.setText("");
+    private void resetForm() {
+        cartModel.setRowCount(0);
+        billArea.setText("");
+        itemInput.setText("");
+        priceInput.setText("");
+        quantityInput.setText("");
     }
 
     public static void main(String[] args) {
