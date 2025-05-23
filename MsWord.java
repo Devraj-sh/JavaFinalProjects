@@ -6,10 +6,10 @@ import java.io.*;
 
 public class MsWord extends JFrame {
 
-    private JTextPane textPane;
-    private JFileChooser fileChooser;
-    private JComboBox<String> fontBox;
-    private JComboBox<Integer> sizeBox;
+    private JTextPane editor;
+    private JFileChooser filePicker;
+    private JComboBox<String> fontSelector;
+    private JComboBox<Integer> sizeSelector;
 
     public MsWord() {
         setTitle("Mini Word");
@@ -17,139 +17,139 @@ public class MsWord extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        textPane = new JTextPane();
-        JScrollPane scrollPane = new JScrollPane(textPane);
-        add(scrollPane, BorderLayout.CENTER);
+        editor = new JTextPane();
+        add(new JScrollPane(editor), BorderLayout.CENTER);
 
-        createMenuBar();
-        createToolBar();
+        setupMenu();
+        setupToolbar();
 
-        fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new FileNameExtensionFilter("Rich Text Format (*.rtf)", "rtf"));
+        filePicker = new JFileChooser();
+        filePicker.setFileFilter(new FileNameExtensionFilter("Rich Text Format (*.rtf)", "rtf"));
     }
 
-    private void createMenuBar() {
+    private void setupMenu() {
         JMenuBar menuBar = new JMenuBar();
+        JMenu file = new JMenu("File");
 
-        JMenu fileMenu = new JMenu("File");
-        JMenuItem open = new JMenuItem("Open");
-        JMenuItem save = new JMenuItem("Save");
-        JMenuItem exit = new JMenuItem("Exit");
+        JMenuItem openItem = new JMenuItem("Open");
+        JMenuItem saveItem = new JMenuItem("Save");
+        JMenuItem closeItem = new JMenuItem("Exit");
 
-        open.addActionListener(e -> openFile());
-        save.addActionListener(e -> saveFile());
-        exit.addActionListener(e -> System.exit(0));
+        openItem.addActionListener(e -> handleOpen());
+        saveItem.addActionListener(e -> handleSave());
+        closeItem.addActionListener(e -> System.exit(0));
 
-        fileMenu.add(open);
-        fileMenu.add(save);
-        fileMenu.addSeparator();
-        fileMenu.add(exit);
+        file.add(openItem);
+        file.add(saveItem);
+        file.addSeparator();
+        file.add(closeItem);
 
-        menuBar.add(fileMenu);
+        menuBar.add(file);
         setJMenuBar(menuBar);
     }
 
-    private void createToolBar() {
-        JToolBar toolBar = new JToolBar();
+    private void setupToolbar() {
+        JToolBar tools = new JToolBar();
 
-        // Font selector
-        fontBox = new JComboBox<>(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames());
-        fontBox.setMaximumSize(new Dimension(150, 25));
-        fontBox.addActionListener(e -> setFontStyle());
+        fontSelector = new JComboBox<>(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames());
+        fontSelector.setMaximumSize(new Dimension(150, 25));
+        fontSelector.addActionListener(e -> applyTextStyle());
 
-        // Size selector
-        sizeBox = new JComboBox<>(new Integer[]{12, 14, 16, 18, 20, 24, 28, 32, 36});
-        sizeBox.setMaximumSize(new Dimension(60, 25));
-        sizeBox.setSelectedItem(16);
-        sizeBox.addActionListener(e -> setFontStyle());
+        sizeSelector = new JComboBox<>(new Integer[]{12, 14, 16, 18, 20, 24, 28, 32, 36});
+        sizeSelector.setMaximumSize(new Dimension(60, 25));
+        sizeSelector.setSelectedItem(16);
+        sizeSelector.addActionListener(e -> applyTextStyle());
 
-        // Style buttons
-        JButton bold = createStyleButton("B", StyleConstants.Bold);
-        JButton italic = createStyleButton("I", StyleConstants.Italic);
-        JButton underline = createStyleButton("U", StyleConstants.Underline);
+        JButton boldBtn = createFormatButton("B", StyleConstants.Bold);
+        JButton italicBtn = createFormatButton("I", StyleConstants.Italic);
+        JButton underlineBtn = createFormatButton("U", StyleConstants.Underline);
 
-        // Color chooser
         JButton colorBtn = new JButton("Color");
         colorBtn.addActionListener(e -> {
-            Color color = JColorChooser.showDialog(this, "Choose Text Color", textPane.getForeground());
-            if (color != null) {
-                MutableAttributeSet attrs = new SimpleAttributeSet();
-                StyleConstants.setForeground(attrs, color);
-                textPane.setCharacterAttributes(attrs, false);
+            Color chosen = JColorChooser.showDialog(this, "Choose Text Color", editor.getForeground());
+            if (chosen != null) {
+                SimpleAttributeSet attr = new SimpleAttributeSet();
+                StyleConstants.setForeground(attr, chosen);
+                editor.setCharacterAttributes(attr, false);
             }
         });
 
-        toolBar.add(fontBox);
-        toolBar.add(sizeBox);
-        toolBar.addSeparator();
-        toolBar.add(bold);
-        toolBar.add(italic);
-        toolBar.add(underline);
-        toolBar.addSeparator();
-        toolBar.add(colorBtn);
+        tools.add(fontSelector);
+        tools.add(sizeSelector);
+        tools.addSeparator();
+        tools.add(boldBtn);
+        tools.add(italicBtn);
+        tools.add(underlineBtn);
+        tools.addSeparator();
+        tools.add(colorBtn);
 
-        add(toolBar, BorderLayout.NORTH);
+        add(tools, BorderLayout.NORTH);
     }
 
-    private JButton createStyleButton(String text, Object styleConstant) {
-        JButton button = new JButton(text);
-        button.setFont(new Font("SansSerif", Font.BOLD, 14));
-        button.addActionListener(e -> toggleStyle(styleConstant));
-        return button;
+    private JButton createFormatButton(String label, Object styleAttr) {
+        JButton btn = new JButton(label);
+        btn.setFont(new Font("SansSerif", Font.BOLD, 14));
+        btn.addActionListener(e -> toggleTextAttribute(styleAttr));
+        return btn;
     }
 
-    private void toggleStyle(Object styleConstant) {
-        StyledDocument doc = textPane.getStyledDocument();
-        int start = textPane.getSelectionStart();
-        int end = textPane.getSelectionEnd();
+    private void toggleTextAttribute(Object attribute) {
+        StyledDocument doc = editor.getStyledDocument();
+        int start = editor.getSelectionStart();
+        int end = editor.getSelectionEnd();
 
         if (start == end) return;
 
-        MutableAttributeSet attrs = new SimpleAttributeSet(doc.getCharacterElement(start).getAttributes());
+        AttributeSet currentAttr = doc.getCharacterElement(start).getAttributes();
+        MutableAttributeSet newAttr = new SimpleAttributeSet(currentAttr);
 
-        boolean current = StyleConstants.isBold(attrs);
-        if (styleConstant == StyleConstants.Italic) current = StyleConstants.isItalic(attrs);
-        if (styleConstant == StyleConstants.Underline) current = StyleConstants.isUnderline(attrs);
+        boolean isActive = false;
+        if (attribute == StyleConstants.Bold) isActive = StyleConstants.isBold(currentAttr);
+        if (attribute == StyleConstants.Italic) isActive = StyleConstants.isItalic(currentAttr);
+        if (attribute == StyleConstants.Underline) isActive = StyleConstants.isUnderline(currentAttr);
 
-        if (styleConstant == StyleConstants.Bold) StyleConstants.setBold(attrs, !current);
-        if (styleConstant == StyleConstants.Italic) StyleConstants.setItalic(attrs, !current);
-        if (styleConstant == StyleConstants.Underline) StyleConstants.setUnderline(attrs, !current);
+        if (attribute == StyleConstants.Bold) StyleConstants.setBold(newAttr, !isActive);
+        if (attribute == StyleConstants.Italic) StyleConstants.setItalic(newAttr, !isActive);
+        if (attribute == StyleConstants.Underline) StyleConstants.setUnderline(newAttr, !isActive);
 
-        doc.setCharacterAttributes(start, end - start, attrs, false);
+        doc.setCharacterAttributes(start, end - start, newAttr, false);
     }
 
-    private void setFontStyle() {
-        String font = (String) fontBox.getSelectedItem();
-        int size = (int) sizeBox.getSelectedItem();
+    private void applyTextStyle() {
+        String font = (String) fontSelector.getSelectedItem();
+        int size = (int) sizeSelector.getSelectedItem();
 
-        MutableAttributeSet attrs = new SimpleAttributeSet();
-        StyleConstants.setFontFamily(attrs, font);
-        StyleConstants.setFontSize(attrs, size);
-        textPane.setCharacterAttributes(attrs, false);
+        SimpleAttributeSet attr = new SimpleAttributeSet();
+        StyleConstants.setFontFamily(attr, font);
+        StyleConstants.setFontSize(attr, size);
+        editor.setCharacterAttributes(attr, false);
     }
 
-    private void openFile() {
-        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            try (FileInputStream fis = new FileInputStream(fileChooser.getSelectedFile())) {
-                textPane.getStyledDocument().remove(0, textPane.getStyledDocument().getLength());
-
-            } catch (Exception ex) {
-                showError("Failed to open file.");
+    private void handleOpen() {
+        if (filePicker.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = filePicker.getSelectedFile();
+            try (FileInputStream input = new FileInputStream(selectedFile)) {
+                editor.getStyledDocument().remove(0, editor.getDocument().getLength());
+                new RTFEditorKit().read(input, editor.getDocument(), 0);
+            } catch (Exception e) {
+                showAlert("Could not open the file.");
             }
         }
     }
 
-    private void saveFile() {
-        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            try (FileOutputStream fos = new FileOutputStream(fileChooser.getSelectedFile())) {
-            } catch (Exception ex) {
-                showError("Failed to save file.");
+    private void handleSave() {
+        if (filePicker.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File file = filePicker.getSelectedFile();
+            try (FileOutputStream output = new FileOutputStream(file)) {
+                new RTFEditorKit().write(output, editor.getDocument(), 0, editor.getDocument().getLength());
+            } catch (Exception e) {
+                showAlert("Could not save the file.");
             }
         }
     }
 
-    private void showError(String message) {
-        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+    private void showAlert(String msg) {
+        JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
     public static void main(String[] args) {
