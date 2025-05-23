@@ -5,9 +5,9 @@ import java.net.*;
 
 public class IPfinder extends JFrame {
 
-    private JTextField urlField;
-    private JButton findButton;
-    private JLabel resultLabel;
+    private JTextField websiteField;
+    private JButton lookupBtn;
+    private JLabel resultText;
 
     public IPfinder() {
         setTitle("Website IP Finder");
@@ -16,53 +16,46 @@ public class IPfinder extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Title Panel
-        JLabel titleLabel = new JLabel("Website IP Finder", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 22));
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        add(titleLabel, BorderLayout.NORTH);
+        JLabel heading = new JLabel("Website IP Finder", SwingConstants.CENTER);
+        heading.setFont(new Font("SansSerif", Font.BOLD, 22));
+        heading.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        add(heading, BorderLayout.NORTH);
 
-        // Center Panel for input
-        JPanel inputPanel = new JPanel(new FlowLayout());
-        urlField = new JTextField(25);
-        urlField.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        findButton = new JButton("Find IP");
-        findButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        JPanel centerPanel = new JPanel(new FlowLayout());
+        websiteField = new JTextField(25);
+        websiteField.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        lookupBtn = new JButton("Find IP");
+        lookupBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
 
-        inputPanel.add(new JLabel("Enter website:"));
-        inputPanel.add(urlField);
-        inputPanel.add(findButton);
-        add(inputPanel, BorderLayout.CENTER);
+        centerPanel.add(new JLabel("Enter website:"));
+        centerPanel.add(websiteField);
+        centerPanel.add(lookupBtn);
+        add(centerPanel, BorderLayout.CENTER);
 
-        // Result Panel
-        JPanel resultPanel = new JPanel();
-        resultLabel = new JLabel(" ");
-        resultLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        resultPanel.add(resultLabel);
-        add(resultPanel, BorderLayout.SOUTH);
+        JPanel bottomPanel = new JPanel();
+        resultText = new JLabel(" ");
+        resultText.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        bottomPanel.add(resultText);
+        add(bottomPanel, BorderLayout.SOUTH);
 
-        // Button Click Listener
-        findButton.addActionListener(e -> findIPAddress());
+        lookupBtn.addActionListener(e -> findIP());
+        websiteField.addActionListener(e -> findIP());
 
-        // Enter key triggers search
-        urlField.addActionListener(e -> findIPAddress());
-
-        // Optional styling
-        getContentPane().setBackground(new Color(240, 248, 255)); // Light blue background
+        getContentPane().setBackground(new Color(240, 248, 255));
     }
 
-    private void findIPAddress() {
-        String site = urlField.getText().trim();
-        if (site.isEmpty()) {
-            resultLabel.setText("Please enter a website.");
+    private void findIP() {
+        String input = websiteField.getText().trim();
+        if (input.isEmpty()) {
+            resultText.setText("Please enter a website.");
             return;
         }
 
         try {
-            InetAddress ip = InetAddress.getByName(site);
-            resultLabel.setText("IP Address of " + site + ": " + ip.getHostAddress());
-        } catch (UnknownHostException e) {
-            resultLabel.setText("Invalid website or network error.");
+            InetAddress address = InetAddress.getByName(input);
+            resultText.setText("IP Address of " + input + ": " + address.getHostAddress());
+        } catch (UnknownHostException ex) {
+            resultText.setText("Invalid website or network issue.");
         }
     }
 
